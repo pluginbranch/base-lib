@@ -1,0 +1,18 @@
+{
+	"name": "pluginbranch/base-lib",
+	"description": "Plugin base library used by Plugin Branch to manage a shared codebase across all plugins.",
+	"homepage": "https://pluginbranch.com/base-lib",
+	"type": "library",
+	"license": "GPL3",
+	"config": {
+		"sort-packages": true
+	},
+	"autoload": {
+		"psr-4": {
+			"PluginBranch\\" : "src/PluginBranch"
+		}
+	},
+	"require": {
+		"lucatume/di52": "2.0.10"
+	}
+}
