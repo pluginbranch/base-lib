@@ -8,21 +8,21 @@
  *
  * The variable being tested for can be an array if you wish to find a nested value.
  *
- * @see Gym\Utils\Arrays->get()
+ * @see PluginBranch\Utils\Arrays->get()
  *
  * @param string|array $var
  * @param mixed        $default
  *
  * @return mixed
  */
-function branch_get_request_var( $var, $default = null ) {
-	$post_var = gym( 'utils.arrays' )->get( $_POST, $var );
+function pb_get_request_var( $var, $default = null ) {
+	$post_var = pb( PluginBranch\Utils\Arrays::class )->get( $_POST, $var );
 
 	if ( null !== $post_var ) {
 		return $post_var;
 	}
 
-	$query_var = gym( 'utils.arrays' )->get( $_GET, $var );
+	$query_var = pb( PluginBranch\Utils\Arrays::class )->get( $_GET, $var );
 
 	if ( null !== $query_var ) {
 		return $query_var;

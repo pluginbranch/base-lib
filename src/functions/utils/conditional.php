@@ -8,7 +8,7 @@
  *
  * @return bool
  */
-function branch_is_truthy( $var ) {
+function pb_is_truthy( $var ) {
 	if ( is_bool( $var ) ) {
 		return $var;
 	}
@@ -21,7 +21,7 @@ function branch_is_truthy( $var ) {
 	 *
 	 * @param array $truthy_strings
 	 */
-	$truthy_strings = (array) apply_filters( 'branch_is_truthy_strings', [
+	$truthy_strings = (array) apply_filters( 'pb_is_truthy_strings', [
 		'1',
 		'enable',
 		'enabled',

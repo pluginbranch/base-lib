@@ -142,12 +142,12 @@ class Template {
 	 *
 	 * @since  0.1.0
 	 *
-	 * @param  mixed   $use  Should we look for template files in the list of folders
+	 * @param  mixed   $value  Should we look for template files in the list of folders
 	 *
 	 * @return self
 	 */
 	public function set_template_folder_lookup( $value = true ) {
-		$this->template_folder_lookup = branch_is_truthy( $value );
+		$this->template_folder_lookup = pb_is_truthy( $value );
 
 		return $this;
 	}
@@ -179,7 +179,7 @@ class Template {
 	 */
 	public function set_template_context_extract( $value = false ) {
 		// Cast as bool and save
-		$this->template_context_extract = branch_is_truthy( $value );
+		$this->template_context_extract = pb_is_truthy( $value );
 
 		return $this;
 	}
@@ -190,7 +190,7 @@ class Template {
 	 *
 	 * @since  0.1.0
 	 *
-	 * @see    Tribe__Utils__Array::set
+	 * @see    Utils\Arrays::set
 	 *
 	 * @param  array    $index     Specify each nested index in order.
 	 *                             Example: array( 'lvl1', 'lvl2' );
@@ -208,7 +208,7 @@ class Template {
 
 		/**
 		 * Allows filtering the the getting of Context variables, also short circuiting
-		 * Following the same strucuture as WP Core
+		 * Following the same structure as WP Core
 		 *
 		 * @since  0.1.0
 		 *
@@ -217,14 +217,14 @@ class Template {
 		 *                             Example: array( 'lvl1', 'lvl2' );
 		 * @param  mixed    $default   Default value if the search finds nothing.
 		 * @param  boolean  $is_local  Use the Local or Global context
-		 * @param  self     $template  Current instance of the Tribe__Template
+		 * @param  self     $template  Current instance of the Template
 		 */
-		$value = apply_filters( 'branch_template_context_get', null, $index, $default, $is_local, $this );
+		$value = apply_filters( 'pb_template_context_get', null, $index, $default, $is_local, $this );
 		if ( null !== $value ) {
 			return $value;
 		}
 
-		return Tribe__Utils__Array::get( $context, $index, $default );
+		return pb( Utils\Arrays::class )->get( $context, $index, $default );
 	}
 
 	/**
@@ -233,7 +233,7 @@ class Template {
 	 *
 	 * @since  0.1.0
 	 *
-	 * @see    Tribe__Utils__Array::set
+	 * @see    Utils\Arrays::set
 	 *
 	 * @param  string|array  $index     To set a key nested multiple levels deep pass an array
 	 *                                  specifying each key in order as a value.
@@ -245,9 +245,9 @@ class Template {
 	 */
 	final public function set( $index, $value = null, $is_local = true ) {
 		if ( true === $is_local ) {
-			return Tribe__Utils__Array::set( $this->context, $index, $value );
+			return pb( Utils\Arrays::class )->set( $this->context, $index, $value );
 		} else {
-			return Tribe__Utils__Array::set( $this->global, $index, $value );
+			return pb( Utils\Arrays::class )->set( $this->global, $index, $value );
 		}
 	}
 
@@ -279,9 +279,9 @@ class Template {
 		 * @param array  $context   Local Context array of data
 		 * @param string $file      Complete path to include the PHP File
 		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Tribe__Template
+		 * @param self   $template  Current instance of the Template
 		 */
-		$this->context = apply_filters( 'branch_template_context', $context, $file, $name, $this );
+		$this->context = apply_filters( 'pb_template_context', $context, $file, $name, $this );
 
 		return $this->context;
 	}
@@ -306,9 +306,9 @@ class Template {
 		 * @since  4.7.20
 		 *
 		 * @param string $path      Complete path to include the base plugin folder
-		 * @param self   $template  Current instance of the Tribe__Template
+		 * @param self   $template  Current instance of the Template
 		 */
-		return apply_filters( 'branch_template_plugin_path', $path, $this );
+		return apply_filters( 'pb_template_plugin_path', $path, $this );
 	}
 
 	/**
@@ -334,9 +334,9 @@ class Template {
 		 * @since  0.1.0
 		 *
 		 * @param array  $namespace Which is the namespace we will look for files in the theme
-		 * @param self   $template  Current instance of the Tribe__Template
+		 * @param self   $template  Current instance of the Template
 		 */
-		return apply_filters( 'branch_template_public_namespace', $namespace, $this );
+		return apply_filters( 'pb_template_public_namespace', $namespace, $this );
 	}
 
 	/**
@@ -361,9 +361,9 @@ class Template {
 		 * @since  0.1.0
 		 *
 		 * @param string $path      Complete path to include the base public folder
-		 * @param self   $template  Current instance of the Tribe__Template
+		 * @param self   $template  Current instance of the Template
 		 */
-		return apply_filters( 'branch_template_public_path', $path, $this );
+		return apply_filters( 'pb_template_public_path', $path, $this );
 	}
 
 	/**
@@ -403,11 +403,11 @@ class Template {
 		 * @since  0.1.0
 		 *
 		 * @param  array  $folders   Complete path to include the base public folder
-		 * @param  self   $template  Current instance of the Tribe__Template
+		 * @param  self   $template  Current instance of the Template
 		 */
-		$folders = apply_filters( 'branch_template_path_list', $folders, $this );
+		$folders = apply_filters( 'pb_template_path_list', $folders, $this );
 
-		uasort( $folders, 'branch_sort_by_priority' );
+		uasort( $folders, 'pb_sort_by_priority' );
 
 		return $folders;
 	}
@@ -451,9 +451,9 @@ class Template {
 				 *
 				 * @param string $file      Complete path to include the PHP File
 				 * @param array  $name      Template name
-				 * @param self   $template  Current instance of the Tribe__Template
+				 * @param self   $template  Current instance of the Template
 				 */
-				return apply_filters( 'branch_template_file', $file, $name, $this );
+				return apply_filters( 'pb_template_file', $file, $name, $this );
 			}
 		}
 
@@ -515,25 +515,25 @@ class Template {
 		 *
 		 * @param string $file      Complete path to include the PHP File
 		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Tribe__Template
+		 * @param self   $template  Current instance of the Template
 		 */
-		do_action( 'branch_template_before_include', $file, $name, $this );
+		do_action( 'pb_template_before_include', $file, $name, $this );
 
 		/**
 		 * Fires an Action for a given template name before including the template file
 		 *
 		 * E.g.:
-		 *    `branch_template_before_include:events/blocks/parts/details`
-		 *    `branch_template_before_include:events/embed`
-		 *    `branch_template_before_include:tickets/login-to-purchase`
+		 *    `pb_template_before_include:events/blocks/parts/details`
+		 *    `pb_template_before_include:events/embed`
+		 *    `pb_template_before_include:tickets/login-to-purchase`
 		 *
 		 * @since 0.1.0
 		 *
 		 * @param string $file      Complete path to include the PHP File
 		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Tribe__Template
+		 * @param self   $template  Current instance of the Template
 		 */
-		do_action( "branch_template_before_include:$hook_name", $file, $name, $this );
+		do_action( "pb_template_before_include:$hook_name", $file, $name, $this );
 
 		// Only do this if really needed (by default it wont)
 		if ( true === $this->template_context_extract && ! empty( $this->context ) ) {
@@ -560,25 +560,25 @@ class Template {
 		 *
 		 * @param string $file      Complete path to include the PHP File
 		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Tribe__Template
+		 * @param self   $template  Current instance of the Template
 		 */
-		do_action( 'branch_template_after_include', $file, $name, $this );
+		do_action( 'pb_template_after_include', $file, $name, $this );
 
 		/**
 		 * Fires an Action for a given template name after including the template file
 		 *
 		 * E.g.:
-		 *    `branch_template_after_include:events/blocks/parts/details`
-		 *    `branch_template_after_include:events/embed`
-		 *    `branch_template_after_include:tickets/login-to-purchase`
+		 *    `pb_template_after_include:events/blocks/parts/details`
+		 *    `pb_template_after_include:events/embed`
+		 *    `pb_template_after_include:tickets/login-to-purchase`
 		 *
 		 * @since 0.1.0
 		 *
 		 * @param string $file      Complete path to include the PHP File
 		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Tribe__Template
+		 * @param self   $template  Current instance of the Template
 		 */
-		do_action( "branch_template_after_include:$hook_name", $file, $name, $this );
+		do_action( "pb_template_after_include:$hook_name", $file, $name, $this );
 
 		// Only fetch the contents after the action
 		$html = ob_get_clean();
@@ -591,25 +591,25 @@ class Template {
 		 * @param string $html      The final HTML
 		 * @param string $file      Complete path to include the PHP File
 		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Tribe__Template
+		 * @param self   $template  Current instance of the Template
 		 */
-		$html = apply_filters( 'branch_template_html', $html, $file, $name, $this );
+		$html = apply_filters( 'pb_template_html', $html, $file, $name, $this );
 
 		/**
 		 * Allow users to filter the final HTML by the name
 		 *
 		 * E.g.:
-		 *    `branch_template_html:wod/item/parts/details`
-		 *    `branch_template_html:wod/embed`
+		 *    `pb_template_html:wod/item/parts/details`
+		 *    `pb_template_html:wod/embed`
 		 *
 		 * @since  0.1.0
 		 *
 		 * @param string $html      The final HTML
 		 * @param string $file      Complete path to include the PHP File
 		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Tribe__Template
+		 * @param self   $template  Current instance of the Template
 		 */
-		$html = apply_filters( "branch_template_html:$hook_name", $html, $file, $name, $this );
+		$html = apply_filters( "pb_template_html:$hook_name", $html, $file, $name, $this );
 
 		if ( $echo ) {
 			echo $html;
