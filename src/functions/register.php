@@ -141,7 +141,7 @@ function pb_load_plugins() {
 		$plugin_load_file = $plugin->path . str_replace( DIRECTORY_SEPARATOR, '/', "src/functions/load.php" );
 
 		if ( ! file_exists( $plugin_load_file ) ) {
-			return;
+			continue;
 		}
 
 		// Now load the plugin if the load file exists.
