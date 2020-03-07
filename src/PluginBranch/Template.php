@@ -403,7 +403,7 @@ class Template {
 		 * @since  0.1.0
 		 *
 		 * @param  array  $folders   Complete path to include the base public folder
-		 * @param  self   $template  Current instance of the Template
+		 * @param  self   $t33emplate  Current instance of the Template
 		 */
 		$folders = apply_filters( 'pb_template_path_list', $folders, $this );
 
