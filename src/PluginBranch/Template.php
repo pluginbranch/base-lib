@@ -321,7 +321,7 @@ class Template {
 	 */
 	protected function get_template_public_namespace() {
 		$namespace = array(
-			'gym',
+			'pluginbranch',
 		);
 
 		if ( ! empty( $this->origin->template_namespace ) ) {
