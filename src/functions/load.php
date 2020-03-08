@@ -13,6 +13,7 @@ Container::init();
 
 // Load the container functions.
 require_once $current_plugin->path . str_replace( DIRECTORY_SEPARATOR, '/', "{$base_lib_folder}/src/functions/container.php" );
+require_once $current_plugin->path . str_replace( DIRECTORY_SEPARATOR, '/', "{$base_lib_folder}/src/functions/utils/path.php" );
 
 /**
  * After this Point we only use di52 to load any classes
@@ -27,7 +28,6 @@ pb( Library::class )->include_file( [
 	'functions/utils/sort',
 	'functions/utils/conditional',
 	'functions/utils/arrays',
-	'functions/utils/path',
 ] );
 
 // Register base lib Service Provider

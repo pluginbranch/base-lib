@@ -8,13 +8,14 @@
  */
 function pb_normalize_path_parts() {
 	$arguments = func_get_args();
+	$arguments = array_merge( ...$arguments );
 	$arguments = array_map( static function( $path ) {
 		return explode( '/', $path );
 	}, $arguments );
 
 	$path = array_merge( ...$arguments );
 	$path = array_filter( $path );
-	
+
 	return $path;
 }
 
@@ -28,7 +29,7 @@ function pb_normalize_path_parts() {
 function pb_path() {
 	$arguments = func_get_args();
 	$path = pb_normalize_path_parts( $arguments );
-	return implode( DIRECTORY_SEPARATOR, $path );
+	return '/' . implode( DIRECTORY_SEPARATOR, $path );
 }
 
 /**
@@ -44,10 +45,10 @@ function pb_path() {
 function pb_ensure_extension( $path, $extension = 'php' ) {
 	$path = pb_path( $path );
 	$extension_str    = sprintf( '.%s', $extension );
-	$extension_length = count_chars( $extension_str );
+	$extension_length = strlen( $extension_str );
 
-	// If the file path doesnt have .php we append it.
-	if ( $extension_str !== substr( $path, -$extension_length, $extension_length ) ) {
+	// If the file path doesnt have extension we append it.
+	if ( $extension_str !== substr( $path, $extension_length * -1, $extension_length ) ) {
 		$path .= $extension_str;
 	}
 

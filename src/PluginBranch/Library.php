@@ -45,14 +45,9 @@ class Library {
 	 * @return string  Absolute file path based on the file name.
 	 */
 	public function get_file_path( $file_name ) {
-		$file_name = $this->base_path . '/src/' . $file_name;
-		$file_path = implode( DIRECTORY_SEPARATOR, explode( '/', $file_name ) );
+		$file_path = pb_path( $this->base_path, 'src', $file_name );
 
-		// If the file path doesnt have .php we append it.
-		if ( '.php' !== substr( $file_path, -4, 4 ) ) {
-			$file_path .= '.php';
-		}
-		return $file_path;
+		return pb_ensure_extension( $file_path, 'php' );
 	}
 
 	/**
