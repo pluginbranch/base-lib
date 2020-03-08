@@ -27,6 +27,7 @@ pb( Library::class )->include_file( [
 	'functions/utils/sort',
 	'functions/utils/conditional',
 	'functions/utils/arrays',
+	'functions/utils/path',
 ] );
 
 // Register base lib Service Provider

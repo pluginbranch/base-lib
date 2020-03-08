@@ -3,190 +3,235 @@ namespace PluginBranch;
 
 class Template {
 	/**
-	 * The folders into we will look for the template
+	 * The folders into which we will look for the template.
 	 *
-	 * @since  0.1.0
+	 * @since 0.1.0
 	 *
-	 * @var array
+	 * @var   array
 	 */
-	protected $folder = array();
+	protected $include_path = [];
 
 	/**
-	 * The origin class for the plugin where the template lives
+	 * Base template for where to look for template.
 	 *
-	 * @since  0.1.0
+	 * @since 0.1.0
 	 *
-	 * @var object
+	 * @var   array
 	 */
-	public $origin;
+	protected $base_path = [];
 
 	/**
-	 * The local context for templates, mutable on every self::template() call
+	 * Namespace used to locate files in the theme lookup.
 	 *
-	 * @since  0.1.0
+	 * @since 0.1.0
 	 *
-	 * @var array
+	 * @var   array
 	 */
-	protected $context;
+	protected $namespace_path = [];
 
 	/**
-	 * The global context for this instance of templates
+	 * The local context for templates, mutable on every self::render() call.
 	 *
-	 * @since  0.1.0
+	 * @since 0.1.0
 	 *
-	 * @var array
+	 * @var   array
 	 */
-	protected $global = array();
+	protected $context = [];
 
 	/**
-	 * Allow changing if class will extract data from the local context
+	 * The global context for this instance of templates.
 	 *
-	 * @since  0.1.0
+	 * @since 0.1.0
 	 *
-	 * @var boolean
+	 * @var   array
 	 */
-	protected $template_context_extract = false;
+	protected $global = [];
 
 	/**
-	 * Base template for where to look for template
+	 * Allow changing if class will extract data from the local context.
 	 *
-	 * @since  0.1.0
+	 * @since 0.1.0
 	 *
-	 * @var array
+	 * @var   boolean
 	 */
-	protected $template_base_path;
+	protected $context_extract = false;
 
 	/**
-	 * Should we use a lookup into the list of folders to try to find the file
+	 * Should we use a lookup into the list of folders to try to find the file.
 	 *
-	 * @since  0.1.0
+	 * @since 0.1.0
 	 *
-	 * @var  bool
+	 * @var   bool
 	 */
-	protected $template_folder_lookup = false;
+	protected $theme_lookup = false;
 
 	/**
-	 * Just an empty Construct
+	 * Create a class variable for the include path, to avoid conflicting with extract.
 	 *
-	 * @since  0.1.0
+	 * @since 0.1.0
 	 *
-	 * @return void
+	 * @var   string
 	 */
-	public function __construct() {
-
-	}
+	protected $__current_file_path;
 
 	/**
-	 * Configures the class origin plugin path
+	 * Setup which is the base path for this template instance, will not be included in the path for hooks.
 	 *
 	 * @since  0.1.0
 	 *
-	 * @param  object|string  $origin   The base origin for the templates
+	 * @param  string|array  $base_path   Base path where this template class will load from, not used for hooks.
 	 *
-	 * @return self
+	 * @return self                       Allow daisy-chain.
 	 */
-	public function set_template_origin( $origin = null ) {
-		if ( empty( $origin ) ) {
-			$origin = $this->origin;
-		}
-
-		if ( is_string( $origin ) ) {
-			// Origin needs to be a class with a `instance` method
-			if ( class_exists( $origin ) && method_exists( $origin, 'instance' ) ) {
-				$origin = call_user_func( array( $origin, 'instance' ) );
-			}
-		}
-
-		if ( empty( $origin->path ) && ! is_dir( $origin ) ) {
-			throw new \InvalidArgumentException( 'Invalid Origin Class for Template Instance' );
-		}
-
-		if ( ! is_string( $origin ) ) {
-			$this->origin = $origin;
-			$this->template_base_path = untrailingslashit( $this->origin->path );
-		} else {
-			$this->template_base_path = untrailingslashit( (array) explode( '/', $origin ) );
-		}
+	public function set_base_path( $base_path ) {
+		$this->base_path = pb_normalize_path_parts( $base_path );
 
 		return $this;
 	}
 
 	/**
-	 * Configures the class with the base folder in relation to the Origin
+	 * Returns the array of the base path we will look for templates for this instance, will not be included on path for hooks.
 	 *
 	 * @since  0.1.0
 	 *
-	 * @param  array|string   $folder  Which folder we are going to look for templates
-	 *
-	 * @return self
+	 * @return array Current folder we are looking for templates.
 	 */
-	public function set_template_folder( $folder = null ) {
-		// Allows configuring a already set class
-		if ( ! isset( $folder ) ) {
-			$folder = $this->folder;
-		}
+	public function get_base_path() {
+		/**
+		 * Allows filtering of the base path for templates.
+		 *
+		 * @since 0.1.0
+		 *
+		 * @param array  base_path  Which is the base folder we will look for files in the plugin.
+		 * @param self   $template  Current instance of the Template.
+		 */
+		return apply_filters( 'pb_template_base_path', $this->base_path, $this );
+	}
 
-		// If Folder is String make it an Array
-		if ( is_string( $folder ) ) {
-			$folder = (array) explode( '/', $folder );
-		}
-
-		// Cast as Array and save
-		$this->folder = (array) $folder;
+	/**
+	 * Setup which is the include path for this template instance, will be included in the path for hooks.
+	 *
+	 * @since  0.1.0
+	 *
+	 * @param  array|string   $include_path  Which folder we are going to look for templates, will be included for hooks.
+	 *
+	 * @return self                          Allow daisy-chain.
+	 */
+	public function set_include_path( $include_path ) {
+		$this->include_path = pb_normalize_path_parts( $include_path );
 
 		return $this;
 	}
 
 	/**
-	 * Configures the class with the base folder in relation to the Origin
+	 * Returns the array of the base path we will look for templates for this instance, will be included on path for hooks.
 	 *
 	 * @since  0.1.0
 	 *
-	 * @param  mixed   $value  Should we look for template files in the list of folders
-	 *
-	 * @return self
+	 * @return array Current folder we are looking for templates.
 	 */
-	public function set_template_folder_lookup( $value = true ) {
-		$this->template_folder_lookup = pb_is_truthy( $value );
+	public function get_include_path() {
+		/**
+		 * Allows filtering of the base path for templates.
+		 *
+		 * @since 0.1.0
+		 *
+		 * @param array  $include_path Which is the base folder we will look for files in the plugin.
+		 * @param self   $template     Current instance of the Template.
+		 */
+		return apply_filters( 'pb_template_base_path', $this->include_path, $this );
+	}
+
+	/**
+	 * Setup which is the Namespace for the theme paths, will be included on the start of the hooks.
+	 *
+	 * @since  0.1.0
+	 *
+	 * @param  array|string   $namespace_path  Which folder we are going to look for templates, will be included for hooks.
+	 *
+	 * @return self                          Allow daisy-chain.
+	 */
+	public function set_namespace_path( $namespace_path ) {
+		$this->namespace_path = pb_normalize_path_parts( $namespace_path );
 
 		return $this;
 	}
 
 	/**
-	 * Configures the class global context
+	 * Fetches the Namespace for the public paths, normally folders to look for in the theme's directory.
 	 *
 	 * @since  0.1.0
 	 *
-	 * @param  array  $context  Default global Context
-	 *
-	 * @return self
+	 * @return array Namespace where we to look for templates.
 	 */
-	public function add_template_globals( $context = array() ) {
-		// Cast as Array merge and save
-		$this->global = wp_parse_args( (array) $context, $this->global );
+	protected function get_namespace_path() {
+		/**
+		 * Allows filtering of the base path for templates
+		 *
+		 * @since  0.1.0
+		 *
+		 * @param array  namespace_path Which is the namespace we will look for files in the theme.
+		 * @param self   $template      Current instance of the Template.
+		 */
+		return apply_filters( 'pb_template_namespace_path', $this->namespace_path, $this );
+	}
+
+	/**
+	 * Sets if this template instance look for files inside of theme folders.
+	 *
+	 * @since  0.1.0
+	 *
+	 * @param  mixed $value Should we look for template files in theme folders.
+	 *
+	 * @return self         Allow daisy-chain.
+	 */
+	public function set_theme_lookup( $value = true ) {
+		$this->theme_lookup = pb_is_truthy( $value );
 
 		return $this;
 	}
 
 	/**
-	 * Configures if the class will extract context for template
+	 * Gets if this template instance look for files inside of theme folders.
 	 *
 	 * @since  0.1.0
 	 *
-	 * @param  bool  $value  Should we extract context for templates
-	 *
-	 * @return self
+	 * @return boolean Whether this instance will look for templates inside of theme folders.
 	 */
-	public function set_template_context_extract( $value = false ) {
+	public function get_theme_lookup() {
+		return $this->theme_lookup;
+	}
+
+	/**
+	 * Configures if the class will extract context for template into local variables.
+	 *
+	 * @since  0.1.0
+	 *
+	 * @param  bool  $value  Should we extract context for templates.
+	 *
+	 * @return self          Allow daisy-chain.
+	 */
+	public function set_context_extract( $value = false ) {
 		// Cast as bool and save
-		$this->template_context_extract = pb_is_truthy( $value );
+		$this->context_extract = pb_is_truthy( $value );
 
 		return $this;
 	}
 
 	/**
-	 * Sets a Index inside of the global or local context
-	 * Final to prevent extending the class when the `get` already exists on the child class
+	 * Gets if the class will extract context for template into local variables.
+	 *
+	 * @since  0.1.0
+	 *
+	 * @return boolean Whether this instance will look for extract context variables.
+	 */
+	public function get_context_extract() {
+		return $this->context_extract;
+	}
+
+	/**
+	 * Sets a Index inside of the global or local context.
+	 * Final to prevent extending the class when the `get` already exists on the child class.
 	 *
 	 * @since  0.1.0
 	 *
@@ -195,29 +240,29 @@ class Template {
 	 * @param  array    $index     Specify each nested index in order.
 	 *                             Example: array( 'lvl1', 'lvl2' );
 	 * @param  mixed    $default   Default value if the search finds nothing.
-	 * @param  boolean  $is_local  Use the Local or Global context
+	 * @param  boolean  $is_local  Use the Local or Global context.
 	 *
 	 * @return mixed The value of the specified index or the default if not found.
 	 */
 	final public function get( $index, $default = null, $is_local = true ) {
-		$context = $this->global;
+		$context = $this->get_global_values();
 
 		if ( true === $is_local ) {
-			$context = $this->context;
+			$context = $this->get_local_values();
 		}
 
 		/**
-		 * Allows filtering the the getting of Context variables, also short circuiting
-		 * Following the same structure as WP Core
+		 * Allows filtering the the getting of Context variables, also short circuiting.
+		 * Following the same structure as WP Core.
 		 *
 		 * @since  0.1.0
 		 *
-		 * @param  mixed    $value     The value that will be filtered
+		 * @param  mixed    $value     The value that will be filtered.
 		 * @param  array    $index     Specify each nested index in order.
 		 *                             Example: array( 'lvl1', 'lvl2' );
 		 * @param  mixed    $default   Default value if the search finds nothing.
-		 * @param  boolean  $is_local  Use the Local or Global context
-		 * @param  self     $template  Current instance of the Template
+		 * @param  boolean  $is_local  Use the Local or Global context.
+		 * @param  self     $template  Current instance of the Template.
 		 */
 		$value = apply_filters( 'pb_template_context_get', null, $index, $default, $is_local, $this );
 		if ( null !== $value ) {
@@ -245,41 +290,45 @@ class Template {
 	 */
 	final public function set( $index, $value = null, $is_local = true ) {
 		if ( true === $is_local ) {
-			return pb( Utils\Arrays::class )->set( $this->context, $index, $value );
-		} else {
-			return pb( Utils\Arrays::class )->set( $this->global, $index, $value );
+			$this->context = pb( Utils\Arrays::class )->set( $this->context, $index, $value );
+
+			return $this->context;
 		}
+
+		$this->global = pb( Utils\Arrays::class )->set( $this->global, $index, $value );
+
+		return $this->global;
 	}
 
 	/**
-	 * Merges local and global context, and saves it locally
+	 * Merges local and global context, and saves it locally.
 	 *
 	 * @since  0.1.0
 	 *
-	 * @param  array  $context  Local Context array of data
-	 * @param  string $file     Complete path to include the PHP File
-	 * @param  array  $name     Template name
+	 * @param  array  $context  Local Context array of data.
+	 * @param  string $file     Complete path to include the PHP File.
+	 * @param  array  $name     Template name.
 	 *
 	 * @return array
 	 */
-	public function merge_context( $context = array(), $file = null, $name = null ) {
-		// Allow for simple null usage as well as array() for nothing
+	public function merge_context( $context = [], $file = null, $name = null ) {
+		// Allow for simple null usage as well as array() for nothing.
 		if ( is_null( $context ) ) {
-			$context = array();
+			$context = [];
 		}
 
-		// Applies local context on top of Global one
-		$context = wp_parse_args( (array) $context, $this->global );
+		// Applies new local context on top of Global + Previous local.
+		$context = wp_parse_args( (array) $context, $this->get_values() );
 
 		/**
-		 * Allows filtering the Local context
+		 * Allows filtering the Local context.
 		 *
 		 * @since  0.1.0
 		 *
-		 * @param array  $context   Local Context array of data
-		 * @param string $file      Complete path to include the PHP File
-		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Template
+		 * @param array  $context   Local Context array of data.
+		 * @param string $file      Complete path to include the PHP File.
+		 * @param array  $name      Template name.
+		 * @param self   $template  Current instance of the Template.
 		 */
 		$this->context = apply_filters( 'pb_template_context', $context, $file, $name, $this );
 
@@ -287,125 +336,36 @@ class Template {
 	}
 
 	/**
-	 * Fetches the path for locating files in the Plugin Folder
+	 * Get the list of theme related folders we will look up for the template.
 	 *
-	 * @since  0.1.0
-	 *
-	 * @return string
-	 */
-	protected function get_template_plugin_path() {
-		// Craft the plugin Path
-		$path = array_merge( (array) $this->template_base_path, $this->folder );
-
-		// Implode to avoid Window Problems
-		$path = implode( DIRECTORY_SEPARATOR, $path );
-
-		/**
-		 * Allows filtering of the base path for templates
-		 *
-		 * @since  4.7.20
-		 *
-		 * @param string $path      Complete path to include the base plugin folder
-		 * @param self   $template  Current instance of the Template
-		 */
-		return apply_filters( 'pb_template_plugin_path', $path, $this );
-	}
-
-	/**
-	 * Fetches the Namespace for the public paths, normaly folders to look for
-	 * in the theme's directory.
-	 *
-	 * @since  0.1.0
+	 * @since 4.11.0
 	 *
 	 * @return array
 	 */
-	protected function get_template_public_namespace() {
-		$namespace = array(
-			'pluginbranch',
-		);
+	protected function get_themes_lookup_list() {
+		$folders = [];
 
-		if ( ! empty( $this->origin->template_namespace ) ) {
-			$namespace[] = $this->origin->template_namespace;
-		}
+		$folders['child-theme'] = [
+			'id'       => 'child-theme',
+			'priority' => 10,
+			'path'     => pb_normalize_path_parts( STYLESHEETPATH ),
+		];
+		$folders['parent-theme'] = [
+			'id'       => 'parent-theme',
+			'priority' => 15,
+			'path'     => pb_normalize_path_parts( TEMPLATEPATH ),
+		];
 
 		/**
-		 * Allows filtering of the base path for templates
+		 * Allows filtering of the list of theme folders in which we will look for the template.
 		 *
 		 * @since  0.1.0
 		 *
-		 * @param array  $namespace Which is the namespace we will look for files in the theme
-		 * @param self   $template  Current instance of the Template
+		 * @param  array   $folders     Complete path to include the base public folder.
+		 * @param  string  $namespace   Loads the files from a specified folder from the themes.
+		 * @param  self    $template    Current instance of the Template.
 		 */
-		return apply_filters( 'pb_template_public_namespace', $namespace, $this );
-	}
-
-	/**
-	 * Fetches the path for locating files given a base folder normally theme related
-	 *
-	 * @since  0.1.0
-	 *
-	 * @param  mixed  $base  Base path to look into
-	 *
-	 * @return string
-	 */
-	protected function get_template_public_path( $base ) {
-		// Craft the plugin Path
-		$path = array_merge( (array) $base, (array) $this->get_template_public_namespace() );
-
-		// Implode to avoid Window Problems
-		$path = implode( DIRECTORY_SEPARATOR, $path );
-
-		/**
-		 * Allows filtering of the base path for templates
-		 *
-		 * @since  0.1.0
-		 *
-		 * @param string $path      Complete path to include the base public folder
-		 * @param self   $template  Current instance of the Template
-		 */
-		return apply_filters( 'pb_template_public_path', $path, $this );
-	}
-
-	/**
-	 * Fetches the folders in which we will look for a given file
-	 *
-	 * @since  0.1.0
-	 *
-	 * @return array
-	 */
-	protected function get_template_path_list() {
-		$folders = array();
-
-		// Only look into public folders if we tell to use folders
-		if ( $this->template_folder_lookup ) {
-			$folders[] = array(
-				'id' => 'child-theme',
-				'priority' => 10,
-				'path' => $this->get_template_public_path( STYLESHEETPATH ),
-			);
-			$folders[] = array(
-				'id' => 'parent-theme',
-				'priority' => 15,
-				'path' => $this->get_template_public_path( TEMPLATEPATH ),
-			);
-		}
-
-		$folders[] = array(
-			'id' => 'plugin',
-			'priority' => 20,
-			'path' => $this->get_template_plugin_path(),
-		);
-
-		/**
-		 * Allows filtering of the list of folders in which we will look for the
-		 * template given.
-		 *
-		 * @since  0.1.0
-		 *
-		 * @param  array  $folders   Complete path to include the base public folder
-		 * @param  self   $t33emplate  Current instance of the Template
-		 */
-		$folders = apply_filters( 'pb_template_path_list', $folders, $this );
+		$folders = (array) apply_filters( 'pb_template_theme_path_list', $folders, $this );
 
 		uasort( $folders, 'pb_sort_by_priority' );
 
@@ -423,93 +383,105 @@ class Template {
 	 * @return string
 	 */
 	public function get_template_file( $name ) {
-		// If name is String make it an Array
-		if ( is_string( $name ) ) {
-			$name = (array) explode( '/', $name );
-		}
+		$name = pb_normalize_path_parts( $name );
 
-		$folders = $this->get_template_path_list();
+		// Build the File Path
+		$file = pb_path( $this->get_base_path(), $this->get_include_path(), $name );
 
-		foreach ( $folders as $folder ) {
-			$folder['path'] = trim( $folder['path'] );
-			if ( ! $folder['path'] ) {
-				continue;
-			}
+		if ( $this->get_theme_lookup() ) {
+			$theme_folders = $this->get_themes_lookup_list();
 
-			// Build the File Path
-			$file = implode( DIRECTORY_SEPARATOR, array_merge( (array) $folder['path'], $name ) );
+			foreach ( $theme_folders as $folder ) {
+				if ( empty( $folder['path'] ) ) {
+					continue;
+				}
 
-			// Append the Extension to the file path
-			$file .= '.php';
+				// Build the File Path
+				$possible_file = pb_path( $folder['path'], $this->get_namespace_path(), $this->get_include_path(), $name );
+				$possible_file = pb_ensure_extension( $possible_file, 'php' );
 
-			// Skip non-existent files
-			if ( file_exists( $file ) ) {
-				/**
-				 * A more Specific Filter that will include the template name
-				 *
-				 * @since 0.1.0
-				 *
-				 * @param string $file      Complete path to include the PHP File
-				 * @param array  $name      Template name
-				 * @param self   $template  Current instance of the Template
-				 */
-				return apply_filters( 'pb_template_file', $file, $name, $this );
+				// Skip non-existent files
+				if ( file_exists( $possible_file ) ) {
+					$file = $possible_file;
+				}
 			}
 		}
 
-		// Couldn't find a template on the Stack
-		return false;
+		$file = pb_ensure_extension( $file, 'php' );
+
+		/**
+		 * A more specific filter that will include the template name.
+		 *
+		 * @since  0.1.0
+		 *
+		 * @param string $file      Complete path to include the PHP File.
+		 * @param array  $name      Template name.
+		 * @param self   $template  Current instance of the Template.
+		 */
+		return apply_filters( 'pb_template_file', $file, $name, $this );
 	}
 
 	/**
 	 * A very simple method to include a Template, allowing filtering and additions using hooks.
 	 *
-	 * @since  0.1.0
+	 * @since 0.1.0
 	 *
-	 * @param  string  $name     Which file we are talking about including
-	 * @param  array   $context  Any context data you need to expose to this file
-	 * @param  boolean $echo     If we should also print the Template
+	 * @param string  $name    Which file we are talking about including.
+	 * @param array   $context Any context data you need to expose to this file.
+	 * @param boolean $echo    If we should also print the Template.
 	 *
-	 * @return string            Final Content HTML
+	 * @return string|false Either the final content HTML or `false` if no template could be found.
 	 */
-	public function template( $name, $context = [], $echo = true ) {
-		// If name is String make it an Array
-		if ( is_string( $name ) ) {
-			$name = (array) explode( '/', $name );
-		}
-
-		// Clean this Variable
-		$name = array_map( 'sanitize_title_with_dashes', $name );
-
-		if ( ! empty( $this->origin->template_namespace ) ) {
-			$namespace = array_merge( (array) $this->origin->template_namespace, $name );
-		} else {
-			$namespace = $name;
-		}
-
-		// Setup the Hook name
-		$hook_name = implode( '/', $namespace );
-
-		// Check if the file exists
+	public function render( $name, $context = [], $echo = true ) {
 		$file = $this->get_template_file( $name );
 
-		// Check if it's a valid variable
-		if ( ! $file ) {
-			return false;
-		}
+		// Specifically use '/' instead of constant here since it's for a hook and not actual files.
+		$hook_name = implode( '/', pb_normalize_path_parts( $this->get_namespace_path(), $this->get_include_path(), $name ) );
 
-		// Before we load the file we check if it exists
-		if ( ! file_exists( $file ) ) {
-			return false;
+		/**
+		 * Allow users to filter the HTML before rendering.
+		 *
+		 * @since 0.1.0
+		 *
+		 * @param string $html      The initial HTML.
+		 * @param string $file      Complete path to include the PHP File.
+		 * @param array  $name      Template name.
+		 * @param self   $template  Current instance of the Template.
+		 */
+		$pre_html = apply_filters( 'pb_template_pre_html', null, $file, $name, $this );
+
+		/**
+		 * Allow users to filter the HTML by the name before rendering.
+		 *
+		 * E.g.:
+		 *    `pb_template_pre_html:events/blocks/parts/details`
+		 *    `pb_template_pre_html:events/embed`
+		 *    `pb_template_pre_html:tickets/login-to-purchase`
+		 *
+		 * @since 0.1.0
+		 *
+		 * @param string $html      The initial HTML.
+		 * @param string $file      Complete path to include the PHP File.
+		 * @param array  $name      Template name.
+		 * @param self   $template  Current instance of the Template.
+		 */
+		$pre_html = apply_filters( "pb_template_pre_html:$hook_name", $pre_html, $file, $name, $this );
+
+		if ( null !== $pre_html ) {
+			if ( $echo ) {
+				echo $pre_html;
+			}
+
+			return $pre_html;
 		}
 
 		ob_start();
 
-		// Merges the local data passed to template to the global scope
+		// Merges the local data passed to template to the global scope.
 		$this->merge_context( $context, $file, $name );
 
 		/**
-		 * Fires an Action before including the template file
+		 * Fires an Action before including the template file.
 		 *
 		 * @since 0.1.0
 		 *
@@ -520,7 +492,7 @@ class Template {
 		do_action( 'pb_template_before_include', $file, $name, $this );
 
 		/**
-		 * Fires an Action for a given template name before including the template file
+		 * Fires an Action for a given template name before including the template file.
 		 *
 		 * E.g.:
 		 *    `pb_template_before_include:events/blocks/parts/details`
@@ -529,43 +501,27 @@ class Template {
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param string $file      Complete path to include the PHP File
-		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Template
+		 * @param string $file      Complete path to include the PHP File.
+		 * @param array  $name      Template name.
+		 * @param self   $template  Current instance of the Template.
 		 */
 		do_action( "pb_template_before_include:$hook_name", $file, $name, $this );
 
-		// Only do this if really needed (by default it wont)
-		if ( true === $this->template_context_extract && ! empty( $this->context ) ) {
-			// We don't allow Extrating of a variable called $name
-			if ( isset( $this->context['name'] ) ) {
-				unset( $this->context['name'] );
-			}
-
-			// We don't allow Extrating of a variable called $file
-			if ( isset( $this->context['file'] ) ) {
-				unset( $this->context['file'] );
-			}
-
-			// Make any provided variables available in the template variable scope
-			extract( $this->context ); // @codingStandardsIgnoreLine
-		}
-
-		include $file;
+		$this->safe_include( $file );
 
 		/**
-		 * Fires an Action after including the template file
+		 * Fires an Action after including the template file.
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param string $file      Complete path to include the PHP File
-		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Template
+		 * @param string $file      Complete path to include the PHP File.
+		 * @param array  $name      Template name.
+		 * @param self   $template  Current instance of the Template.
 		 */
 		do_action( 'pb_template_after_include', $file, $name, $this );
 
 		/**
-		 * Fires an Action for a given template name after including the template file
+		 * Fires an Action for a given template name after including the template file.
 		 *
 		 * E.g.:
 		 *    `pb_template_after_include:events/blocks/parts/details`
@@ -574,9 +530,9 @@ class Template {
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param string $file      Complete path to include the PHP File
-		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Template
+		 * @param string $file      Complete path to include the PHP File.
+		 * @param array  $name      Template name.
+		 * @param self   $template  Current instance of the Template.
 		 */
 		do_action( "pb_template_after_include:$hook_name", $file, $name, $this );
 
@@ -584,30 +540,31 @@ class Template {
 		$html = ob_get_clean();
 
 		/**
-		 * Allow users to filter the final HTML
+		 * Allow users to filter the final HTML.
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param string $html      The final HTML
-		 * @param string $file      Complete path to include the PHP File
-		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Template
+		 * @param string $html      The final HTML.
+		 * @param string $file      Complete path to include the PHP File.
+		 * @param array  $name      Template name.
+		 * @param self   $template  Current instance of the Template.
 		 */
 		$html = apply_filters( 'pb_template_html', $html, $file, $name, $this );
 
 		/**
-		 * Allow users to filter the final HTML by the name
+		 * Allow users to filter the final HTML by the name.
 		 *
 		 * E.g.:
-		 *    `pb_template_html:wod/item/parts/details`
-		 *    `pb_template_html:wod/embed`
+		 *    `pb_template_html:events/blocks/parts/details`
+		 *    `pb_template_html:events/embed`
+		 *    `pb_template_html:tickets/login-to-purchase`
 		 *
-		 * @since  0.1.0
+		 * @since 0.1.0
 		 *
-		 * @param string $html      The final HTML
-		 * @param string $file      Complete path to include the PHP File
-		 * @param array  $name      Template name
-		 * @param self   $template  Current instance of the Template
+		 * @param string $html      The final HTML.
+		 * @param string $file      Complete path to include the PHP File.
+		 * @param array  $name      Template name.
+		 * @param self   $template  Current instance of the Template.
 		 */
 		$html = apply_filters( "pb_template_html:$hook_name", $html, $file, $name, $this );
 
@@ -616,5 +573,86 @@ class Template {
 		}
 
 		return $html;
+	}
+
+	/**
+	 * Includes a give PHP inside of a safe context.
+	 *
+	 * This method is required to prevent template files messing with local variables used inside of the
+	 * `self::render` method. Also shelters the template loading from any possible variables that could
+	 * be overwritten by the context.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param string $file Which file will be included with safe context.
+	 *
+	 * @return void
+	 */
+	public function safe_include( $file ) {
+		// We use this instance variable to prevent collisions.
+		$this->__current_file_path = $file;
+		unset( $file );
+
+		// Only do this if really needed (by default it wont).
+		if ( true === $this->get_context_extract() && ! empty( $this->context ) ) {
+			// Make any provided variables available in the template variable scope.
+			extract( $this->get_values() ); // @phpcs:ignore
+		}
+
+		include $this->__current_file_path;
+
+		// After the include we reset the variable.
+		unset( $this->__current_file_path );
+	}
+
+	/**
+	 * Sets a number of values at the same time.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array $values   An associative key/value array of the values to set.
+	 * @param bool  $is_local Whether to set the values as global or local; defaults to local as the `set` method does.
+	 *
+	 * @see   Template::set()
+	 */
+	public function set_values( array $values = [], $is_local = true ) {
+		foreach ( $values as $key => $value ) {
+			$this->set( $key, $value, $is_local );
+		}
+	}
+
+	/**
+	 * Returns the Template global context.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @return array An associative key/value array of the Template global context.
+	 */
+	public function get_global_values() {
+		return $this->global;
+	}
+
+	/**
+	 * Returns the Template local context.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @return array An associative key/value array of the Template local context.
+	 */
+	public function get_local_values() {
+		return $this->context;
+	}
+
+	/**
+	 * Returns the Template global and local context values.
+	 *
+	 * Local values will override the template global context values.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @return array An associative key/value array of the Template global and local context.
+	 */
+	public function get_values() {
+		return array_merge( $this->get_global_values(), $this->get_local_values() );
 	}
 }
