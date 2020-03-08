@@ -6,19 +6,21 @@
  * @since  0.1.0
  *
  * @param  string $file         The base plugin file that will be loaded.
+ * @param  string $slug         Slug like value used to index registered plugins.
  * @param  string $label        Name of the plugin which will be used to display the initial error message for unmet requirements.
  * @param  int    $priority     In which priority internally we will load this plugin.
  * @param  array  $requirements Requirements for the plugin, PHP, WordPress and eventually other internal pieces.
  *
  * @return void   Registering of plugins needs no return.
  */
-function pb_register_plugin( $file, $label, $priority = 10, array $requirements = [] ) {
+function pb_register_plugin( $file, $slug, $label, $priority = 10, array $requirements = [] ) {
 	if ( ! isset( $GLOBALS['__plugin_branch_plugins'] )  || ! is_array( $GLOBALS['__plugin_branch_plugins'] ) ) {
 		$GLOBALS['__plugin_branch_plugins'] = [];
 	}
 
 	$GLOBALS['__plugin_branch_plugins'][] = (object) [
 		'file'         => $file,
+		'slug'         => $slug,
 		'label'        => $label,
 		'priority'     => absint( $priority ),
 		'requirements' => $requirements,
@@ -133,20 +135,9 @@ function pb_load_plugins() {
 	// After we compared all Base libs available load the latest version.
 	require $base_lib_load_file;
 
-	// Sort the remainder of the plugins by priority.
-	uasort( $plugins, 'pb_sort_by_priority' );
+	// Set all plugins and load them.
+	pb( \PluginBranch\Library::class )->set_plugins( $plugins )->load_plugins();
 
-	// After ordering plugins we load by priority.
-	foreach ( $plugins as $plugin ) {
-		$plugin_load_file = $plugin->path . str_replace( DIRECTORY_SEPARATOR, '/', "src/functions/load.php" );
-
-		if ( ! file_exists( $plugin_load_file ) ) {
-			continue;
-		}
-
-		// Now load the plugin if the load file exists.
-		require $plugin_load_file;
-	}
 	$has_loaded = true;
 }
 
