@@ -8,12 +8,12 @@
  */
 function pb_normalize_path_parts() {
 	$arguments = func_get_args();
-	$arguments = array_merge( ...$arguments );
+	$arguments = pb_array_flatten( $arguments );
 	$arguments = array_map( static function( $path ) {
 		return explode( '/', $path );
 	}, $arguments );
 
-	$path = array_merge( ...$arguments );
+	$path = pb_array_flatten( $arguments );
 	$path = array_filter( $path );
 
 	return $path;

@@ -30,3 +30,86 @@ function pb_get_request_var( $var, $default = null ) {
 
 	return $default;
 }
+
+/**
+ * Flattens a set of arguments splitting strings by dash.
+ *
+ * @since 0.1.0
+ *
+ * @return array The flattened array with any strings divided by dash.
+ */
+function pb_array_flatten_by_dash() {
+	$arguments = func_get_args();
+	$arguments = pb_array_flatten( $arguments );
+	$arguments = array_map( static function( $path ) {
+		return explode( '-', $path );
+	}, $arguments );
+
+	$flat = pb_array_flatten( $arguments );
+	$flat = array_filter( $flat );
+
+	return $flat;
+}
+
+/**
+ * Flattens a set of arguments splitting strings by underscore.
+ *
+ * @since 0.1.0
+ *
+ * @return array The flattened array with any strings divided by underscore.
+ */
+function pb_array_flatten_by_underscore() {
+	$arguments = func_get_args();
+	$arguments = pb_array_flatten( $arguments );
+	$arguments = array_map( static function( $path ) {
+		return explode( '_', $path );
+	}, $arguments );
+
+	$flat = pb_array_flatten( $arguments );
+	$flat = array_filter( $flat );
+
+	return $flat;
+}
+
+/**
+ * Flattens a set of arguments splitting strings by dot.
+ *
+ * @since 0.1.0
+ *
+ * @return array The flattened array with any strings divided by dot.
+ */
+function pb_array_flatten_by_dot() {
+	$arguments = func_get_args();
+	$arguments = pb_array_flatten( $arguments );
+	$arguments = array_map( static function( $path ) {
+		return explode( '.', $path );
+	}, $arguments );
+
+	$flat = pb_array_flatten( $arguments );
+	$flat = array_filter( $flat );
+
+	return $flat;
+}
+
+/**
+ * Flattens an multidimensional array into a flat array.
+ *
+ * @since 0.1.0
+ *
+ * @return array The flattened array.
+ */
+function pb_array_flatten() {
+	$result = [];
+	$array  = func_get_args();
+
+	foreach ( $array as $key => $value ) {
+		if ( is_array( $value ) ) {
+			$result = array_merge( $result, pb_array_flatten( ... $value ) );
+		} else {
+			$result = array_merge( $result, [ $key => $value ] );
+		}
+	}
+
+	return $result;
+}
+

@@ -13,6 +13,7 @@ Container::init();
 
 // Load the container functions.
 require_once $current_plugin->path . str_replace( DIRECTORY_SEPARATOR, '/', "{$base_lib_folder}/src/functions/container.php" );
+require_once $current_plugin->path . str_replace( DIRECTORY_SEPARATOR, '/', "{$base_lib_folder}/src/functions/utils/arrays.php" );
 require_once $current_plugin->path . str_replace( DIRECTORY_SEPARATOR, '/', "{$base_lib_folder}/src/functions/utils/path.php" );
 
 /**
@@ -27,7 +28,6 @@ pb( Library::class )->set_base_path( $current_plugin->path . $base_lib_folder );
 pb( Library::class )->include_file( [
 	'functions/utils/sort',
 	'functions/utils/conditional',
-	'functions/utils/arrays',
 ] );
 
 // Register base lib Service Provider

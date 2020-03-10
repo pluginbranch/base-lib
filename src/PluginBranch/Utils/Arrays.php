@@ -22,7 +22,7 @@ class Arrays {
 	 *
 	 * @return array Full array with the key set to the specified value.
 	 */
-	public function set( array $array, $key, $value ) {
+	public function set( $array, $key, $value ) {
 		// Convert strings and such to array.
 		$key = (array) $key;
 
@@ -45,7 +45,7 @@ class Arrays {
 				_doing_it_wrong( __FUNCTION__, esc_html( $error ), '0.1.0' );
 				break;
 			} elseif ( ! isset( $key_pointer[ $i ] ) ) {
-				$key_pointer[ $i ] = array();
+				$key_pointer[ $i ] = [];
 			}
 
 			// Dive one level deeper into the nested array.
@@ -54,6 +54,43 @@ class Arrays {
 
 		// Set the value for the specified key
 		$key_pointer = $value;
+
+		return $array;
+	}
+
+	/**
+	 * Delete the key within an array, can set a key nested inside of a multidimensional array.
+	 *
+	 * Example: set( $a, [ 0, 1, 2 ], 'hi' ) sets $a[0][1][2] = 'hi' and returns $a.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param mixed        $array   The array containing the key this sets.
+	 * @param string|array $indexes To set a key nested multiple levels deep pass an array specifying each key in order as a value.
+	 *                              Example: array( 'lvl1', 'lvl2', 'lvl3' );
+	 *
+	 * @return array Full array with the key set to the specified value.
+	 */
+	public function delete( $array, $indexes ) {
+		// Convert strings and such to array.
+		$indexes    = (array) $indexes;
+		$last_index = end( $indexes );
+
+		// Reset to the start of the index.
+		reset( $indexes );
+
+		// Setup a pointer that we can point to the key specified.
+		$key_pointer = &$array;
+
+		// Iterate through every key, setting the pointer one level deeper each time.
+		foreach ( $indexes as $index ) {
+			if ( $index === $last_index ) {
+				unset( $key_pointer[ $index ] );
+			} else {
+				// Dive one level deeper into the nested array.
+				$key_pointer = &$key_pointer[ $index ];
+			}
+		}
 
 		return $array;
 	}
@@ -103,7 +140,7 @@ class Arrays {
 	 *
 	 * @return string
 	 */
-	private function unique_value( int $limit ) {
+	private function unique_value( $limit ) {
 		return substr( base_convert( sha1( uniqid( mt_rand() ) ), 16, 36 ), 0, $limit );
 	}
 
