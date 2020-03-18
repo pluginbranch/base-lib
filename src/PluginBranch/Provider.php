@@ -20,29 +20,22 @@ class Provider extends tad_DI52_ServiceProvider {
 	public function register() {
 		$this->container->singleton( Utils\Arrays::class, Utils\Arrays::class );
 		$this->container->singleton( Shortcode\Manager::class, Shortcode\Manager::class );
-		$this->hook();
+		$this->register_hooks();
 	}
 
 	/**
-	 * Any hooking for any class needs happen here.
-	 *
-	 * In place of delegating the hooking responsibility to the single classes they are all hooked here.
+	 * Registers the provider handling all the 1st level filters and actions for the plugin.
 	 *
 	 * @since 0.1.0
+	 *
+	 * @return void Register of hooks has no return.
 	 */
-	protected function hook() {
-		add_action( 'init', [ $this, 'action_add_shortcodes' ] );
-	}
+	protected function register_hooks() {
+		$hooks = new Hooks( $this->container );
+		$hooks->register();
 
-	/**
-	 * Action to add all shortcodes associated with Plugin branch Lib.
-	 *
-	 * @since 0.1.0
-	 *
-	 * @return void Action hook has no return.
-	 */
-	public function action_add_shortcodes() {
-		pb( Shortcode\Manager::class )->add_shortcodes();
+		// Allow Hooks to be removed, by having the them registered to the container
+		$this->container->singleton( Hooks::class, $hooks );
 	}
 
 	/**
