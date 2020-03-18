@@ -7,6 +7,21 @@ namespace PluginBranch\Utils;
  * @since 0.1.0
  */
 class Arrays {
+
+	/**
+	 * All methods on this Class are avail Static and Dynamically.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param string $name       Name of the method called.
+	 * @param array  $arguments  Arguments passed down.
+	 *
+	 * @return mixed Which return from the method called.
+	 */
+	public static function __callStatic( $name, $arguments ) {
+		return pb( static::class )->$name( ...$arguments );
+	}
+
 	/**
 	 * Set key/value within an array, can set a key nested inside of a multidimensional array.
 	 *
